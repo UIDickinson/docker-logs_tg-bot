@@ -8,7 +8,12 @@ build:
 	docker build -t $(DOCKER_IMAGE) .
 
 run:
-	docker run -d --name $(DOCKER_CONTAINER) --restart unless-stopped $(DOCKER_IMAGE)
+	docker run -d \
+		--name $(DOCKER_CONTAINER) \
+		--restart unless-stopped \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		$(DOCKER_IMAGE)
+
 
 stop:
 	docker stop $(DOCKER_CONTAINER) || true
