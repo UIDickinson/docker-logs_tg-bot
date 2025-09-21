@@ -18,12 +18,12 @@
 # Since this already has a Makefile, use its these commands to setup docker
 
 # Cmd lines:
-make build    # Build the Docker image
-make run      # Run the container
-make logs     # Tail the logs
-make stop     # Stop & remove container
-make restart  # Restart the bot
-make clean    # Remove image + container
+* make build    # Build the Docker image
+* make run      # Run the container
+* make logs     # Tail the logs
+* make stop     # Stop & remove container
+* make restart  # Restart the bot
+* make clean    # Remove image + container
 
 # Telegram cmds
 - /start
