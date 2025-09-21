@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  docker-logs-bot:
+    build: .
+    container_name: docker-logs-bot
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Mount docker socket to allow reading logs. Use :ro to reduce risk but docker SDK might require r/w for some endpoints.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Limit access: do not publish ports. Bot connects to Telegram via outbound HTTPS.
+    network_mode: "bridge"
+    # Optionally set resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
