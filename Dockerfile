@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Create app dir
-WORKDIR /tg-bot
+WORKDIR /app
 
 # Install system deps required for Docker SDK (none special) and tzdata if you need timezone handling
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,7 +17,7 @@ COPY . .
 
 # Non-root user (optional, but note: must still access docker socket or run with proper group)
 RUN useradd --create-home --shell /bin/bash appuser \
-    && chown -R appuser:appuser /tg-bot
+    && chown -R appuser:appuser /app
 USER appuser
 
 ENV PYTHONUNBUFFERED=1

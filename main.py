@@ -30,8 +30,8 @@ load_dotenv()
 # Configuration from env
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ALLOWED_USERS = [int(x.strip()) for x in os.environ.get("ALLOWED_USERS", "").split(",") if x.strip()]
-LOG_TAIL = int(os.environ.get("LOG_TAIL", "50"))
-MAX_MSG_CHARS = int(os.environ.get("MAX_MSG_CHARS", "2000"))
+LOG_TAIL = int(os.environ.get("LOG_TAIL", "100"))
+MAX_MSG_CHARS = int(os.environ.get("MAX_MSG_CHARS", "4000"))
 STREAM_FLUSH_SECONDS = float(os.environ.get("STREAM_FLUSH_SECONDS", "2.0"))
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
