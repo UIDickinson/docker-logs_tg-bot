@@ -1,28 +1,23 @@
-APP_NAME = telegram-bot
-DOCKER_IMAGE = $(APP_NAME):latest
-DOCKER_CONTAINER = $(APP_NAME)-container
+.PHONY: build up logs shell test run install
 
-.PHONY: build run stop logs restart clean
+install:
+	python -m pip install --upgrade pip
+	python -m pip install -r requirements.txt
 
 build:
-	docker build -t $(DOCKER_IMAGE) .
+	docker build -t telegram-docker-monitor:latest .
 
-run:
-	docker run -d \
-		--name $(DOCKER_CONTAINER) \
-		--restart unless-stopped \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		$(DOCKER_IMAGE)
-
-
-stop:
-	docker stop $(DOCKER_CONTAINER) || true
-	docker rm $(DOCKER_CONTAINER) || true
+up:
+	docker-compose up -d --build
 
 logs:
-	docker logs -f $(DOCKER_CONTAINER)
+	docker-compose logs -f
 
-restart: stop run
+shell:
+	docker-compose exec tbot /bin/sh
 
-clean: stop
-	docker rmi $(DOCKER_IMAGE) || true
+run:
+	python bot.py
+
+test:
+	bash test_create_logger.sh

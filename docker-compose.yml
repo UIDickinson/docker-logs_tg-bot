@@ -1,20 +1,17 @@
-version: "3.9"
+### File: `docker-compose.yml`
 
+version: '3.8'
 services:
-  telgram-bot:
+  tbot:
     build: .
-    container_name: telegram-bot
-    env_file:
-      - .env
-    restart: unless-stopped
-    # Mount docker socket to allow reading logs. Use :ro to reduce risk but docker SDK might require r/w for some endpoints.
+    container_name: telegram-docker-monitor
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - ALLOWED_USERS=${ALLOWED_USERS}
+      - LOG_POLL_INTERVAL=${LOG_POLL_INTERVAL:-1}
+      - STREAM_RATE_LIMIT=${STREAM_RATE_LIMIT:-2}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    # Limit access: do not publish ports. Bot connects to Telegram via outbound HTTPS.
-    network_mode: "bridge"
-    # Optionally set resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    # optionally provide more limits (security)
+    # network_mode: host  # usually not necessary
