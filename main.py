@@ -19,6 +19,7 @@ Run locally: python bot.py
 """
 
 import os
+from dotenv import load_dotenv
 import asyncio
 import logging
 import textwrap
@@ -38,16 +39,20 @@ from telegram.ext import (
     ContextTypes,
 )
 
+load_dotenv()
 # ---------------------- Configuration ----------------------
 LOG_POLL_INTERVAL = float(os.getenv("LOG_POLL_INTERVAL", "1"))
 STREAM_RATE_LIMIT = float(os.getenv("STREAM_RATE_LIMIT", "2"))
 MAX_LINES_PER_MSG = int(os.getenv("MAX_LINES_PER_MSG", "10"))
 MAX_MESSAGE_CHUNK = 3900  # safety under Telegram 4096 chars
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+from dotenv import dotenv_values
+env = dotenv_values()
+
+TELEGRAM_TOKEN = env.get("TELEGRAM_TOKEN")
 ALLOWED_USERS = set()
-if os.getenv("ALLOWED_USERS"):
-    ALLOWED_USERS = set(int(x.strip()) for x in os.getenv("ALLOWED_USERS").split(",") if x.strip())
+if env.get("ALLOWED_USERS"):
+    ALLOWED_USERS = set(int(x.strip()) for x in env.get("ALLOWED_USERS").split(",") if x.strip())
 
 if not TELEGRAM_TOKEN:
     raise SystemExit("TELEGRAM_TOKEN environment variable is required")
@@ -59,11 +64,63 @@ logging.basicConfig(
 logger = logging.getLogger("telegram-docker-monitor")
 
 # ---------------------- Docker client ----------------------
-try:
-    docker_client = docker.from_env()
-except Exception as e:
-    logger.exception("Failed to create Docker client: %s", e)
-    raise
+if os.getenv("USE_MOCK_DOCKER"):
+    from unittest.mock import MagicMock
+    import datetime
+    import random
+
+    class MockContainer:
+        def __init__(self, name, image, status):
+            self.name = name
+            self.id = f"{name[:3]}_{random.randint(1000,9999)}"
+            self.image = type("Image", (), {"tags": [image]})
+            self.status = status
+            self.attrs = {
+                "Created": datetime.datetime.now().isoformat(),
+                "Config": {"Image": image},
+                "State": {"Status": status},
+            }
+
+        def logs(self, tail=50, stream=False, timestamps=True):
+            if stream:
+                for i in range(1, 100):
+                    yield f"{datetime.datetime.now().isoformat()} mock log line {i} from {self.name}\n".encode()
+            else:
+                return "\n".join(
+                    f"{datetime.datetime.now().isoformat()} mock log line {i} from {self.name}"
+                    for i in range(1, tail + 1)
+                ).encode()
+
+    class MockDockerClient:
+        def __init__(self):
+            self.containers = self
+
+            # Fake containers
+            self._containers = [
+                MockContainer("web_app", "nginx:latest", "running"),
+                MockContainer("db", "postgres:14", "exited"),
+                MockContainer("worker", "python:3.12", "running"),
+            ]
+
+        def list(self, all=True):
+            return self._containers
+
+        def get(self, name_or_id):
+            for c in self._containers:
+                if c.name == name_or_id or c.id.startswith(name_or_id):
+                    return c
+            raise Exception(f"No such container: {name_or_id}")
+
+    docker_client = MockDockerClient()
+    print("⚠️ Using MOCK Docker client with fake containers/logs.")
+
+else:
+    try:
+        import docker
+        docker_client = docker.from_env()
+    except Exception as e:
+        logger.exception("Failed to create Docker client: %s", e)
+        raise
 
 # Active streams: chat_id -> {"task": asyncio.Task, "container": container_name_or_id}
 active_streams: Dict[int, Dict] = {}
