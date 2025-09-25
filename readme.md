@@ -1,41 +1,17 @@
-# This bot features includes:
-1. Real-time log streaming (Docker streaming API, non-blocking via thread executor)
+# This bot features:
+1. Interactive inline buttons for quick container selection
 
-2. Interactive inline buttons for quick container selection
+2. Restricted access to authorized users (by Telegram user ID set via env)
 
-3. Whitelisted users (by Telegram user ID set via env)
+3. Commands: list containers, recent logs, stream logs, stop streaming, status
 
-4. Commands: list containers, recent logs, stream logs, stop streaming, status
+4. Robust error handling and user feedback
 
-5. Robust error handling and user feedback
+5. Per-user rate limiting / message batching (token-bucket + buffer flush)
 
-6. Per-user rate limiting / message batching (token-bucket + buffer flush)
+6. Safe truncation of long outputs
 
-7. Safe truncation of long outputs
-
-8. Graceful shutdown
-
-# Since this already has a Makefile, use its these commands to setup docker
-
-# Cmd lines:
-* make build    # Build the Docker image
-* make run      # Run the container
-* make logs     # Tail the logs
-* make stop     # Stop & remove container
-* make restart  # Restart the bot
-* make clean    # Remove image + container
-
-# Telegram cmds
-- /start
-- /containers
-- /logs <name>
-- /stream <name>
-- /stop
-- /status
-
-# Telegram Docker Monitor
-
-A small Telegram bot (Python) to: list containers, fetch recent logs, stream logs in near-real-time, and show container details.
+7. Graceful shutdown
 
 ## Requirements
 - Python 3.10+
@@ -43,17 +19,21 @@ A small Telegram bot (Python) to: list containers, fetch recent logs, stream log
 - A Telegram bot token
 - Your Telegram numeric user ID(s) to authorize
 
-## Quick local run
-1. Copy `.env.example` to `.env` and set TELEGRAM_TOKEN and ALLOWED_USERS.
-2. Install deps: `pip install -r requirements.txt` (or `make install`).
-3. Run: `python bot.py`.
-
-## Run with Docker Compose (recommended for VPS)
-
-1. Set environment variables in your shell or in a `.env` file (compose will read it).
-2. `make up` or `docker-compose up -d --build`
-
 **Important:** The container mounts `/var/run/docker.sock` read-only so the bot can talk to the host Docker engine. This is powerful — secure your deployment!
+
+## Configuration via environment variables:
+- TELEGRAM_TOKEN : your bot token
+- ALLOWED_USERS  : comma-separated Telegram numeric user IDs (e.g. 12345678,87654321)
+- LOG_POLL_INTERVAL (optional) : how often to poll logs in seconds (default 1)
+- STREAM_RATE_LIMIT (optional) : minimum seconds between sending batched messages (default 2)
+
+since this already has a Makefile, use its these commands to setup docker and run the bot
+
+# Cmd lines:
+> make help
+
+this would show you cmds to enter in order to setup after you've cloned this repo in a new dir (cd telegram-docker-bot)
+
 
 ## Usage (Telegram commands)
 - `/container` — list containers with inline action buttons for logs/stream/status
@@ -69,10 +49,5 @@ A small Telegram bot (Python) to: list containers, fetch recent logs, stream log
 - Only users in `ALLOWED_USERS` can use the bot.
 - Running this bot with `/var/run/docker.sock` mounted gives it powerful control. Prefer to run on a dedicated VM or manage access carefully.
 
-## Extending
+## You can expand yours to
 - Add per-user rate-limits, multiple simultaneous subscriptions, log filtering (grep), or saving logs to persistent storage.
-```
-
----
-
-# End of document
